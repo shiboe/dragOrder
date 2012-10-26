@@ -1,7 +1,9 @@
 /*
- * jQuery Drag Order - https://github.com/shiboe/dragOrder
+ * $ Drag Order - https://github.com/shiboe/dragOrder
  * 
  * A simple script for implementing a dragable ordering interface.
+ * 
+ * $(element).dragOrder({options});
  * 
  * Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012.
  * [Licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)](http://http://creativecommons.org/licenses/by-nc-sa/3.0/)
@@ -11,22 +13,25 @@
 (function( $ ){
 
   var methods = {
-     init : function( options ) {
+     init : function( options, callback ) {
          
         var settings = $.extend( {
-            "updown":true,
-            "catchThreshold": 3
+            "updown":true, // wheither the items are listed vertically, false is for horizontal orientation
+            "catchThreshold": 3, // to prevent clicks triggering a move, drag must hold over this many pixels
+            "moveStyles": ".dragContainer", // the element(s) within the container to apply the moving styles to, defaults to the dragContainer
+            "callbackStringDelimiter": false // sets the parameter for the callback to a delimitered string, with the given value as a separator. false returns an array
         }, options);
 
        return this.each(function(){
 
-           build( this, settings );
+           build( this, settings, callback );
 
            var data = $(this).data("dragOrder");
            if( !data ){
                
                $(this).data('dragOrder',{
-                   settings: settings
+                   'settings': settings,
+                   'callback': callback
                });
            }
        });
@@ -52,8 +57,14 @@
 
   };
   
-  function build( container, settings )
-  {
+  /*
+   * builds our dragOrder group - wraps each element within the given container
+   * with a .dragContainer that is in charge of handling our dragging. Applies 
+   * the drag catching event mousedown on our drag Containers, firing the catchDrag
+   * function should a mousedown occur. Applies our move styles to the settings element.
+   */
+  function build( container, settings, callback )
+  {   
       $(container).children().each(function(){
           var w = $(this).outerWidth(),
               h = $(this).outerHeight();
@@ -61,44 +72,81 @@
                  .css({ "position":"relative" });
       });
 
-      $(container).children(".dragContainer").on("mousedown.dragOrder",function(e){ if(e.which == 1){ e.preventDefault(); catchDrag(this,settings, e.pageY, e.pageX); } });
-
-      console.log("dragorder built");
+      $(container).children(".dragContainer").each(function(){
+          $(this).on("mousedown.dragOrder",function(e){ if(e.which == 1){ e.preventDefault(); catchDrag(this,settings, e.pageY, e.pageX, callback ); } });
+          this.setAttribute("data-order-index", $(this).index() );
+      });
+                    
+      $(container).find( settings.moveStyles ).addClass("moveStyles");
+      
+      if( typeof callback == "function" ) callback.call( this, order( container, settings.callbackStringDelimiter ) );
+  }
+  
+  /*
+   * returns order of elements marked from their original order. if delimiteredString
+   * is passed the function will return a string separated with the given character(s),
+   * otherwise, the function returns an array. The key marks the current index, the value
+   * marks the original index.
+   */
+  function order( container, delimiteredString )
+  {
+      var order = [];
+      
+      $(".dragContainer", container ).each(function(){
+          order.push( this.getAttribute('data-order-index') );
+      });
+      
+      if( typeof delimiteredString == "undefined" || delimiteredString === false )return order;
+      else return order.join( delimiteredString );
   }
 
-  function catchDrag( element, settings, y, x )
+  /*
+   * event function in charge of checking for drag initiators. When a mousedown
+   * event is fired on one of our dragContainers, this function is called, which
+   * then monitors the mousemove event, looking to see if the mouse is dragged 
+   * beyond the settings.catchThreshhold. If it is, the monitoring event is halted,
+   * and the dragging function is called to take over. If a mouseup occurs before
+   * the catchThreshhold has been breeched, the mousemove monitor is halted, and
+   * everything returns to normal.
+   */
+  function catchDrag( element, settings, y, x, callback )
   {
-      jQuery(window).on("mousemove.dragOrder_catch", function(e){
+      $(window).on("mousemove.dragOrder_catch", function(e){
             if( Math.abs( e.pageY - y ) > settings.catchThreshold || Math.abs( e.pageX - x ) > settings.catchThreshold ){
-                jQuery(window).off("mousemove.dragOrder_catch").off("mouseup.dragOrder_catch");
-                dragging(element,settings, e.pageY, e.pageX);
+                $(window).off("mousemove.dragOrder_catch").off("mouseup.dragOrder_catch");
+                dragging( element,settings, e.pageY, e.pageX, callback );
             }
       })
       .on("mouseup.dragOrder_catch", function(e){
-            jQuery(window).off("mousemove.dragOrder_catch").off("mouseup.dragOrder_catch");
+            $(window).off("mousemove.dragOrder_catch").off("mouseup.dragOrder_catch");
       });
   }
 
-  function dragging( element, settings, y, x )
+
+  /*
+   * Our main function that handles dragging - triggered from catchDrag. First the
+   * moving dragContainer is cloned, and given appropriate styles/classes for moving.
+   */
+  function dragging( element, settings, y, x, callback )
   {
-      var newElement = jQuery(element).clone(true).appendTo("body").addClass("moving").css("position","absolute").append("<div class='moveIndex'></div>"),
-            newElementCenterOffset = { y: y - jQuery(element).offset().top, x: x - jQuery(element).offset().left },
+      var newElement = $(element).clone(true).appendTo("body").addClass("moving").css("position","absolute").append("<div class='moveIndex'></div>"),
+            newElementCenterOffset = { y: y - $(element).offset().top, x: x - $(element).offset().left },
             hotzones = [],
             newPos = -1,
-            oldPos = jQuery(element).index(),
-            siblings = jQuery(element).siblings(".dragContainer"),
-            parent = jQuery(element).parent();
+            oldPos = $(element).index(),
+            siblings = $(element).siblings(".dragContainer"),
+            container = $(element).parent();
 
-        jQuery(element).addClass("moved");
+        $(element).addClass("moved");
 
         if(settings.updown)
         {
             siblings.each(function(){
-                var thisPos = jQuery(this).index(),
-                    thisOffset = jQuery(this).offset(),
+                var thisPos = $(this).index(),
+                    thisOffset = $(this).offset(),
                     thisMargin = { 
-                        top: parseFloat( jQuery(this).children().css("marginTop") ),
-                        bottom: parseFloat( jQuery(this).children().css("marginBottom") ) },
+                        top: parseFloat( $(this).children().css("marginTop") ),
+                        bottom: parseFloat( $(this).children().css("marginBottom") ) },
                     littleExtra = thisMargin.top > thisMargin.bottom ? thisMargin.top/2 : thisMargin.bottom/2; // extra hotzone as midpoint between 2 collapsed margins
 
                 if( thisPos > oldPos )thisPos--;
@@ -106,16 +154,16 @@
                 hotzones.push({
                     x: thisOffset.left,
                     y: thisOffset.top - littleExtra,
-                    x2: thisOffset.left + ( jQuery(this).width() ),
-                    y2: thisOffset.top + ( jQuery(this).height() / 2 ),
+                    x2: thisOffset.left + ( $(this).width() ),
+                    y2: thisOffset.top + ( $(this).height() / 2 ),
                     newPos: thisPos,
                     replacing: thisPos
                 });
                 hotzones.push({
                     x: thisOffset.left,
-                    y: thisOffset.top + ( jQuery(this).height() / 2 ),
-                    x2: thisOffset.left + jQuery(this).width(),
-                    y2: thisOffset.top + jQuery(this).height() + littleExtra,
+                    y: thisOffset.top + ( $(this).height() / 2 ),
+                    x2: thisOffset.left + $(this).width(),
+                    y2: thisOffset.top + $(this).height() + littleExtra,
                     newPos: thisPos+1,
                     replacing: thisPos
                 });
@@ -125,28 +173,28 @@
         {
             siblings.each(function(){
                 hotzones.push({
-                    x:jQuery(this).offset().left - settings.hotzoneExtend,
-                    y:jQuery(this).offset().top,
-                    x2:jQuery(this).offset().left + ( jQuery(this).width() / 2 ),
-                    y2:jQuery(this).offset().top + jQuery(this).height(),
-                    newPos:jQuery(this).index()
+                    x:$(this).offset().left - settings.hotzoneExtend,
+                    y:$(this).offset().top,
+                    x2:$(this).offset().left + ( $(this).width() / 2 ),
+                    y2:$(this).offset().top + $(this).height(),
+                    newPos:$(this).index()
                 });
                 hotzones.push({
-                    x:jQuery(this).offset().left + ( jQuery(this).width() / 2 ),
-                    y:jQuery(this).offset().top,
-                    x2:jQuery(this).offset().left + jQuery(this).width() + settings.hotzoneExtend,
-                    y2:jQuery(this).offset().top + jQuery(this).height(),
-                    newPos:jQuery(this).index()+1
+                    x:$(this).offset().left + ( $(this).width() / 2 ),
+                    y:$(this).offset().top,
+                    x2:$(this).offset().left + $(this).width() + settings.hotzoneExtend,
+                    y2:$(this).offset().top + $(this).height(),
+                    newPos:$(this).index()+1
                 });
             });
         }
 
-        jQuery(window).on("mousemove.dragOrder", function(e){
-            jQuery(newElement).css({ "top":e.pageY-newElementCenterOffset.y, "left":e.pageX-newElementCenterOffset.x });
+        $(window).on("mousemove.dragOrder", function(e){
+            $(newElement).css({ "top":e.pageY-newElementCenterOffset.y, "left":e.pageX-newElementCenterOffset.x });
             var hot = false,
                 updateDisplay = newPos >= 0 ? newPos +1 : "-";
 
-            jQuery(newElement).data("index",newPos).children(".moveIndex").html(updateDisplay);
+            $(newElement).data("index",newPos).children(".moveIndex").html(updateDisplay);
 
             for(var i=0; i<hotzones.length; i++)
             {
@@ -170,24 +218,25 @@
             }
 
         }).on("mouseup.dragOrder", function(e){
-            jQuery(window).off("mousemove.dragOrder").off("mouseup.dragOrder");
+            $(window).off("mousemove.dragOrder").off("mouseup.dragOrder");
             siblings.removeClass("sidleBack sidleForward");
-            jQuery(newElement).removeClass("moving").css({ "top":"auto","left":"auto","position":"relative" }).children(".moveIndex").remove();
+            $(newElement).removeClass("moving").css({ "top":"","left":"","position":"relative" }).children(".moveIndex").remove();
 
             var preceeding = siblings.eq(newPos-1),
                 noAction = false;
 
-            if( newPos > 0 )jQuery(newElement).insertAfter(preceeding);
-            else if( newPos == 0 ) jQuery(newElement).prependTo(parent);
+            if( newPos > 0 )$(newElement).insertAfter(preceeding);
+            else if( newPos == 0 ) $(newElement).prependTo(container);
             else {
                 noAction = true;
-                jQuery(newElement).remove();
-                jQuery(element).removeClass("moved");
+                $(newElement).remove();
+                $(element).removeClass("moved");
             }
 
-            if( ! noAction )jQuery(element).remove();
-            
+            if( ! noAction )$(element).remove();
+
+            if( typeof callback == "function" ) callback.call( this, order( container, settings.callbackStringDelimiter ) );
         });
   }
 
-})( jQuery );
+})( $ );
