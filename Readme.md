@@ -27,10 +27,10 @@ This should should probably be expanded to utilize html 5 draggability when avai
         $('#photos').dragOrder({ vertical:true });
 
         /* with callback */
-        $('#photos').dragOrder( function( new_order ){ console.log( new_order ); } );
+        $('#photos').dragOrder({ callback: function( new_order ){ console.log( new_order ); } });
 
         /* with options and callback */
-        $('#photos').dragOrder({ callbackStringDelimiter:'#', callback: function(o){ alert(o); } });
+        $('#photos').dragOrder({ delimiter:'#', callback: function(o){ alert(o); } });
 
         /* with loading a sync order */
         $('#photos').dragOrder({  loadSyncOrder: function(){ return document.getElementById('input#order').value; } });
