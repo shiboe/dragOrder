@@ -33,21 +33,19 @@ This should should probably be expanded to utilize html 5 draggability when avai
 
 ##      Options
 Any of the following may be passed as an object parameter to the dragOrder call:
-*       **vertical**
-        *true || false (default: false)*
-        Wheither the list of draggable items should be vertical or horizontal. This affects the location of the triggering hotzones, as well as the animation effects, though the later can be customized.
+<ul>
+<li><b>vertical</b><br><i>true || false (default: false)</i>
+<p>Wheither the list of draggable items should be vertical or horizontal. This affects the location of the triggering hotzones, as well as the animation effects, though the later can be customized.</p>
 
-*       **catchThreshhold**
-        *int (default: 3)*
-        A buffer used to distinguish between an intended drag event, and an errant mouse click or mouse hold. The number of pixels that must be dragged before a true drag event is triggered.
+<li><b>catchThreshhold</b><br><i>int (default: 3)</i>
+<p>A buffer used to distinguish between an intended drag event, and an errant mouse click or mouse hold. The number of pixels that must be dragged before a true drag event is triggered.</p>
 
-*       **moveStyles**
-        *jQuery selector (default: .dragContainer)*
-        A selector that determines what elements should recieve the moving effects given by the style .moveStyles, namely, the box shadow. Helpful if draggable elements consist of many elements, not all of which are in an opaque rectangle.
+<li><b>moveStyles</b><br><i>jQuery selector (default: .dragContainer)</i> 
+<p>A selector that determines what elements should recieve the moving effects given by the style .moveStyles, namely, the box shadow. Helpful if draggable elements consist of many elements, not all of which are in an opaque rectangle.</p>
 
-*       **callbackStringDelimiter**
-        *string (default: false)*
-        When given as a string, the output parameter to the callback function is given as a string (rather than the default array) where the orders are joined by the given string as a separator. So passing '#' would yield '0#1#3#2' to the callback function.
+<li><b>callbackStringDelimiter</b><br><i>string (default: false)</i>
+<p>When given as a string, the output parameter to the callback function is given as a string (rather than the default array) where the orders are joined by the given string as a separator. So passing '#' would yield '0#1#3#2' to the callback function.</p>
+</ul>
 
 ## 	License
 Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012. 
