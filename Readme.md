@@ -4,13 +4,13 @@
 ![example image](https://shiboe.com/media/images/dragOrder.png)
 
 ## 	Philosophy
-To provide a simplistic script for implementing draggable sorting on a list of items. 
-This should should probably be expanded to utilize html 5 draggability when available. 
+To provide a simplistic script for implementing draggable sorting on a list of items. <br><i>ex: One could have a list of images with corresponding image info, call dragOrder on their container, and mouse drag the image container elements to reorder them on the page. If supplied a callback, dragOrder will pass each new ordering to the callback. The callback could send the reorder as a delimiter separated string to a hidden input's value, post to a server to store the new order of images, then reload that new order on the resulting page by inserting the order into an element, and pulling the order from that element into dragOrder via the loadSyncOrder option. This should should probably be expanded to utilize html 5 draggability when available.</i> 
 
 ## 	Features
 *	draggability on a set of elements
-*       re-ordering of elements through dragging
+*       re-ordering of elements using drag and release
 *       callback functionality for order parsing
+*       order loading for state awareness
 
 ##      Usage
 
