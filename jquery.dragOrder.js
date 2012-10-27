@@ -1,6 +1,6 @@
 /*
  * Drag Order - https://github.com/shiboe/dragOrder
- * Version 1.3.0
+ * Version 1.4.0
  * 
  * A simple script for implementing a dragable ordering interface.
  * 
@@ -14,34 +14,28 @@
 (function( $ ){
 
   var methods = {
-     init : function( options, callback ) {
+     init : function( options ) {
          
         var settings = $.extend( {
             "vertical":false, // wheither the items are listed vertically, false is for horizontal orientation
             "catchThreshold": 3, // to prevent clicks triggering a move, drag must hold over this many pixels
             "moveStyles": ".dragContainer", // the element(s) within the container to apply the moving styles to, defaults to the dragContainer
-            "callbackStringDelimiter": false // sets the parameter for the callback to a delimitered string, with the given value as a separator. false returns an array
+            "delimiter": "#", // sets the delimiter to use when passing the order to the callback and from the preorder function as a string
+            "callback": false, // function to recieve the order as a parameter after each re-ordering
+            "callbackOrderType": "string", // the parameter type to recieve the order as, can be (string||array)
+            "callbackOnInitialize": false, // fires the callback after the initialization (in addition to the default fire whenever an item is dragged to a new position)
+            "loadSyncOrder": false // order to use on load, can be string, array, or a function that returns a string or array. Primarily used to maintain state.
         }, options);
 
-       return this.each(function(){
-
-           build( this, settings, callback );
-
-           var data = $(this).data("dragOrder");
-           if( !data ){
-               
-               $(this).data('dragOrder',{
-                   'settings': settings,
-                   'callback': callback
-               });
-           }
-       });
-
+       return this.each(function(){ build( this, settings ); });
+     },
+     reset : function() {
+        //TODO
      },
      destroy : function( ) {
 
        return this.each(function(){
-           
+           //TODO
        });
      }
   };
@@ -50,7 +44,7 @@
     
     if ( methods[method] ) {
       return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ));
-    }else if ( typeof method === 'object' || ! method ) {
+    }else if ( typeof method === 'object' ) {
       return methods.init.apply( this, arguments );
     } else {
       $.error( 'Method ' +  method + ' does not exist on jQuery.dragOrder' );
@@ -62,9 +56,11 @@
    * builds our dragOrder group - wraps each element within the given container
    * with a .dragContainer that is in charge of handling our dragging. Applies 
    * the drag catching event mousedown on our drag Containers, firing the catchDrag
-   * function should a mousedown occur. Applies our move styles to the settings element.
+   * function should a mousedown occur. If a pre-order exists, the dragContainers
+   * are ordered appropriately to match their historical order state. Finaly apply
+   * our orientation class, moveStyles, and fire callback if desired.
    */
-  function build( container, settings, callback )
+  function build( container, settings )
   {   
       $(container).children().each(function(){
           var w = $(this).outerWidth(),
@@ -72,18 +68,69 @@
               margins = { l:$(this).css("marginLeft"), r:$(this).css("marginRight"), t:$(this).css("marginTop"), b:$(this).css("marginBottom") };
           $(this).wrap("<div class='dragContainer' style='width:"+w+"px; height:"+h+"px; margin-left:"+margins.l+"; margin-right:"+margins.r+"; margin-top:"+margins.t+"; margin-bottom:"+margins.b+";' />");
       });
-
+     
       $(container).children(".dragContainer").each(function(){
           if( ! settings.vertical )$(this).addClass("horizontal");
-          $(this).on("mousedown.dragOrder",function(e){ if(e.which == 1){ e.preventDefault(); catchDrag(this,settings, e.pageY, e.pageX, callback ); } });
+          $(this).on("mousedown.dragOrder",function(e){ if(e.which == 1){ e.preventDefault(); catchDrag(this,settings, e.pageY, e.pageX ); } });
           this.setAttribute("data-order-index", $(this).index() );
       });
+      
+      if( settings.loadSyncOrder != false ) reorder( container, settings.loadSyncOrder, settings.delimiter );
                   
       if( settings.vertical )$(container).addClass("vertical");
       
       $(container).find( settings.moveStyles ).addClass("moveStyles");
       
-      if( typeof callback == "function" ) callback.call( this, order( container, settings.callbackStringDelimiter ) );
+      if( typeof settings.callback == "function" && settings.callbackOnInitialize ) settings.callback.call( this, order( container, settings.callbackOrderType, settings.delimiter ) );
+  }
+  
+  
+  
+  /*
+   * checks if the given order array is a valid order, meaning it has a 1 to 1 
+   * mapping with the container elements to be used in dragOrder. If it is not,
+   * an in order array mapping to the container elements is returned [1,2, 3, ..., n]
+   */
+  function valid_order( order, container )
+  {
+      var actuals = $(container).children(),
+          reset = false,
+          reset_array = [];
+  
+      if( actuals.length != order.length )reset = true;
+      else
+      {
+          for( var i=0; i< actuals.length; i++ )
+          {
+              reset_array.push(i);
+              if( ! ( i in order ) ) reset = true; // check values are real, every i must exist
+              if( order[i] < 0 || order[i] >= actuals.length ) reset = true; // check keys are real, all i must be in valid range, since we already know they can't be duplicate
+          }
+      }
+      
+      if( reset ) return reset_array;
+      return order;
+  }
+  
+  /*
+   * 
+   */
+  function reorder( container, order, delimiter )
+  {
+      if( typeof order == "function" ) order = order.call(); 
+      if( typeof order == "string" && typeof delimiter == "string" ) order = order.split( delimiter );
+      if( typeof order != "array" && typeof order != "object" )throw "Can only reorder elements using an array. Please provide an array of the desired order.";
+      
+      order = valid_order( order, container );
+      
+      var old_elements = $(container).children(),
+          new_elements = [];
+          
+      for( var i=0; i<old_elements.length; i++ ) new_elements[i] = old_elements[ order[i] ];
+      
+      $( old_elements ).detach();
+      
+      $( container ).append( new_elements );
   }
   
   /*
@@ -92,7 +139,7 @@
    * otherwise, the function returns an array. The key marks the current index, the value
    * marks the original index.
    */
-  function order( container, delimiteredString )
+  function order( container, orderType, delimiter )
   {
       var order = [];
       
@@ -100,8 +147,8 @@
           order.push( this.getAttribute('data-order-index') );
       });
       
-      if( typeof delimiteredString == "undefined" || delimiteredString === false )return order;
-      else return order.join( delimiteredString );
+      if( orderType != "string" )return order;
+      else return order.join( delimiter );
   }
 
   /*
@@ -113,12 +160,12 @@
    * the catchThreshhold has been breeched, the mousemove monitor is halted, and
    * everything returns to normal.
    */
-  function catchDrag( element, settings, y, x, callback )
+  function catchDrag( element, settings, y, x )
   {
       $(window).on("mousemove.dragOrder_catch", function(e){
             if( Math.abs( e.pageY - y ) > settings.catchThreshold || Math.abs( e.pageX - x ) > settings.catchThreshold ){
                 $(window).off("mousemove.dragOrder_catch").off("mouseup.dragOrder_catch");
-                dragging( element,settings, e.pageY, e.pageX, callback );
+                dragging( element,settings, e.pageY, e.pageX );
             }
       })
       .on("mouseup.dragOrder_catch", function(e){
@@ -136,7 +183,7 @@
    * and the moving element is moved to it's new location.
    * 
    */
-  function dragging( element, settings, y, x, callback )
+  function dragging( element, settings, y, x )
   {
       var newElement = $(element).clone(true).appendTo("body").addClass("moving").css("position","absolute").append("<div class='moveIndex'></div>"),
             newElementCenterOffset = { y: y - $(element).offset().top, x: x - $(element).offset().left },
@@ -256,7 +303,7 @@
 
             if( ! noAction )$(element).remove();
 
-            if( typeof callback == "function" ) callback.call( this, order( container, settings.callbackStringDelimiter ) );
+            if( typeof settings.callback == "function" ) settings.callback.call( this, order( container, settings.callbackOrderType, settings.delimiter ) );
         });
   }
 
