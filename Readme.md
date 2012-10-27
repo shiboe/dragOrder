@@ -1,6 +1,7 @@
 
 # 	jQuery.dragOrder
 ### A simple script for implementing a dragable ordering interface
+(https://shiboe.com/media/images/dragOrder.png)
 
 ## 	Philosophy
 To provide a simplistic script for implementing draggable sorting on a list of items. 
