@@ -1,11 +1,12 @@
 /*
- * $ Drag Order - https://github.com/shiboe/dragOrder
+ * Drag Order - https://github.com/shiboe/dragOrder
+ * Version 1.3.0
  * 
  * A simple script for implementing a dragable ordering interface.
  * 
  * $(element).dragOrder({options});
  * 
- * Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012.
+ * Developed by [Stephen Cave](sccave@gmail.com) @ [shiboe.com](http://shiboe.com) Copyright 2012.
  * [Licensed under the MIT License](http://opensource.org/licenses/mit-license.php)
  * 
  */

@@ -48,7 +48,7 @@ Any of the following may be passed as an object parameter to the dragOrder call:
 </ul>
 
 ## 	License
-Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012. 
+Developed by [Stephen Cave](sccave@gmail.com) @ [shiboe.com](http://shiboe.com) Copyright 2012. 
 [Licensed under the MIT License](http://opensource.org/licenses/mit-license.php)
 
 ##	TODO
