@@ -3,13 +3,18 @@
  *  DEFAULT STYLES FOR DRAGORDER
  */
 
-.dragContainer                      { cursor:move; position:relative; }
-.dragContainer.sidleForward         { position:relative; top:30px; left:10px; }
-.dragContainer.sidleBack            { position:relative; top:-30px; left:10px; }
+.dragContainer                      { cursor:move; position:relative; top:0px; left:0px; }
+.dragContainer.horizontal           { display:inline-block; }
+
+.dragContainer.sidleForward             { position:relative; left:30px; top:10px; }
+.dragContainer.sidleBack                { position:relative; left:-30px; top:10px; }
+.vertical .dragContainer.sidleForward   { position:relative; top:30px; left:10px; }
+.vertical .dragContainer.sidleBack      { position:relative; top:-30px; left:10px; }
+
 .moveIndex                          { position:absolute; top:0px; left:-30px; padding:2px 6px; background-color:white; border:1px solid gray; }
 .dragContainer.moving.moveStyles,
 .dragContainer.moving .moveStyles   { box-shadow:0 0 10px black; -moz-box-shadow:0 0 10px black; -webkit-box-shadow:0 0 10px black; margin:0px; }
-.dragContainer.moved                { opacity:.3; }
+.dragContainer.moved                { opacity:.2; }
 
 /* css animation */
 

@@ -16,7 +16,7 @@
      init : function( options, callback ) {
          
         var settings = $.extend( {
-            "updown":true, // wheither the items are listed vertically, false is for horizontal orientation
+            "vertical":false, // wheither the items are listed vertically, false is for horizontal orientation
             "catchThreshold": 3, // to prevent clicks triggering a move, drag must hold over this many pixels
             "moveStyles": ".dragContainer", // the element(s) within the container to apply the moving styles to, defaults to the dragContainer
             "callbackStringDelimiter": false // sets the parameter for the callback to a delimitered string, with the given value as a separator. false returns an array
@@ -67,16 +67,19 @@
   {   
       $(container).children().each(function(){
           var w = $(this).outerWidth(),
-              h = $(this).outerHeight();
-          $(this).wrap("<div class='dragContainer' style='width:"+w+"px; height:"+h+"px;' />")
-                 .css({ "position":"relative" });
+              h = $(this).outerHeight(),
+              margins = { l:$(this).css("marginLeft"), r:$(this).css("marginRight"), t:$(this).css("marginTop"), b:$(this).css("marginBottom") };
+          $(this).wrap("<div class='dragContainer' style='width:"+w+"px; height:"+h+"px; margin-left:"+margins.l+"; margin-right:"+margins.r+"; margin-top:"+margins.t+"; margin-bottom:"+margins.b+";' />");
       });
 
       $(container).children(".dragContainer").each(function(){
+          if( ! settings.vertical )$(this).addClass("horizontal");
           $(this).on("mousedown.dragOrder",function(e){ if(e.which == 1){ e.preventDefault(); catchDrag(this,settings, e.pageY, e.pageX, callback ); } });
           this.setAttribute("data-order-index", $(this).index() );
       });
-                    
+                  
+      if( settings.vertical )$(container).addClass("vertical");
+      
       $(container).find( settings.moveStyles ).addClass("moveStyles");
       
       if( typeof callback == "function" ) callback.call( this, order( container, settings.callbackStringDelimiter ) );
@@ -126,6 +129,11 @@
   /*
    * Our main function that handles dragging - triggered from catchDrag. First the
    * moving dragContainer is cloned, and given appropriate styles/classes for moving.
+   * Next an array of hotzones are created, which act as triggering points left and
+   * right of each dragContainer. Mousemoves check against these hotzones when dragging
+   * with a floating clone of the moving element, and on mouseup, the clone is removed
+   * and the moving element is moved to it's new location.
+   * 
    */
   function dragging( element, settings, y, x, callback )
   {
@@ -139,7 +147,7 @@
 
         $(element).addClass("moved");
 
-        if(settings.updown)
+        if(settings.vertical)
         {
             siblings.each(function(){
                 var thisPos = $(this).index(),
@@ -172,19 +180,31 @@
         else
         {
             siblings.each(function(){
+                var thisPos = $(this).index(),
+                    thisOffset = $(this).offset(),
+                    thisMargin = {
+                        left: parseFloat( $(this).children().css("marginLeft") ),
+                        right: parseFloat( $(this).children().css("marginRight") )
+                    },
+                    littleExtra = thisMargin.left > thisMargin.right ? thisMargin.left/2 : thisMargin.right/2;
+                    
+                if( thisPos > oldPos )thisPos--;
+                
                 hotzones.push({
-                    x:$(this).offset().left - settings.hotzoneExtend,
-                    y:$(this).offset().top,
-                    x2:$(this).offset().left + ( $(this).width() / 2 ),
-                    y2:$(this).offset().top + $(this).height(),
-                    newPos:$(this).index()
+                    x:thisOffset.left - littleExtra,
+                    y:thisOffset.top,
+                    x2:thisOffset.left + ( $(this).width() / 2 ),
+                    y2:thisOffset.top + $(this).height(),
+                    newPos:thisPos,
+                    replacing: thisPos
                 });
                 hotzones.push({
-                    x:$(this).offset().left + ( $(this).width() / 2 ),
-                    y:$(this).offset().top,
-                    x2:$(this).offset().left + $(this).width() + settings.hotzoneExtend,
-                    y2:$(this).offset().top + $(this).height(),
-                    newPos:$(this).index()+1
+                    x:thisOffset.left + ( $(this).width() / 2 ),
+                    y:thisOffset.top,
+                    x2:thisOffset.left + $(this).width() + littleExtra,
+                    y2:thisOffset.top + $(this).height(),
+                    newPos:thisPos+1,
+                    replacing: thisPos
                 });
             });
         }
