@@ -36,12 +36,15 @@ Any of the following may be passed as an object parameter to the dragOrder call:
 *       **vertical**
         *true || false (default: false)*
         Wheither the list of draggable items should be vertical or horizontal. This affects the location of the triggering hotzones, as well as the animation effects, though the later can be customized.
+
 *       **catchThreshhold**
         *int (default: 3)*
         A buffer used to distinguish between an intended drag event, and an errant mouse click or mouse hold. The number of pixels that must be dragged before a true drag event is triggered.
+
 *       **moveStyles**
         *jQuery selector (default: .dragContainer)*
         A selector that determines what elements should recieve the moving effects given by the style .moveStyles, namely, the box shadow. Helpful if draggable elements consist of many elements, not all of which are in an opaque rectangle.
+
 *       **callbackStringDelimiter**
         *string (default: false)*
         When given as a string, the output parameter to the callback function is given as a string (rather than the default array) where the orders are joined by the given string as a separator. So passing '#' would yield '0#1#3#2' to the callback function.
@@ -59,9 +62,11 @@ Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012.
 *       recoded to work both vertically and horizontally
 *       added callback functionality
 *       re-joined and tweaked styles, adding moveStyle
+
 ### 1.2.0
 *       Conversion to jQuery plugin
 *       Minor issue fixes, tweaks
+
 ### 1.1.1
 * 	versioning start to github
 * 	no known bugs with current build
