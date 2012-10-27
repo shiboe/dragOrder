@@ -6,7 +6,7 @@
  * $(element).dragOrder({options});
  * 
  * Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012.
- * [Licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)](http://http://creativecommons.org/licenses/by-nc-sa/3.0/)
+ * [Licensed under the MIT License](http://opensource.org/licenses/mit-license.php)
  * 
  */
 

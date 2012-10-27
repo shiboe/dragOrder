@@ -47,8 +47,8 @@ Any of the following may be passed as an object parameter to the dragOrder call:
         When given as a string, the output parameter to the callback function is given as a string (rather than the default array) where the orders are joined by the given string as a separator. So passing '#' would yield '0#1#3#2' to the callback function.
 
 ## 	License
-Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012.
-[Licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)](http://http://creativecommons.org/licenses/by-nc-sa/3.0/)
+Developed by [Stephen Cave](sccave@gmail.com) Copyright 2012. 
+[Licensed under the MIT License](http://opensource.org/licenses/mit-license.php)
 
 ##	TODO
 1.	rebuild for html 5 implementations where available
